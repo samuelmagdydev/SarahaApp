@@ -1,6 +1,7 @@
 import express from "express";
 
-import authController from"./modules/auth/auth.controller.js";
+import authController from "./modules/auth/auth.controller.js";
+import userController from "./modules/user/user.controller.js"
 import connectDB from "./DB/connection.db.js";
 import { globalErrorHandling } from "./utils/response.js";
 
@@ -15,6 +16,7 @@ const bootstrap = async () => {
 
   app.get("/", (req, res) => res.send("Hello World"));
   app.use("/auth", authController);
+  app.use("/user",userController);
   app.all('{/*dummy}',(req,res)=> res.status(404).json({message:"In-valid app Routing"}))
 
 

@@ -6,8 +6,21 @@ export const asyncHandler = (fn) => {
   };
 };
 
+
+
 export const globalErrorHandling = (error, req, res, next) => {
   return res
     .status(error.cause || 400)
-    .json({ message: error.message, stack: error.stack });
+    .json({ err_message: error.message, stack: error.stack });
+};
+
+
+
+export const successResponse = ({
+  res,
+  message = "Done",
+  status = 200,
+  data = {},
+} = {}) => {
+  return res.status(status).json({ message, data });
 };

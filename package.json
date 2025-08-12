@@ -3,8 +3,6 @@
   "version": "1.0.0",
   "main": "./src/server.js",
   "type": "module",
-
-
   "scripts": {
     "start:dev": "node --watch ./src/server.js"
   },
@@ -13,6 +11,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.2",
+    "crypto-js": "^4.2.0",
     "express": "^5.1.0",
     "mongoose": "^8.17.0"
   }
