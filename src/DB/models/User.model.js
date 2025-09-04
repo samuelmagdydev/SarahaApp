@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 
-let genderEnum = { male: "male", female: "female" };
+export const genderEnum = { male: "male", female: "female" };
+export const roleEnum = { user: "User", admin: "Admin" };
+export const providerEnum = { system: "system", google: "google" };
 
 const userSchema = new mongoose.Schema(
   {
@@ -12,7 +14,6 @@ const userSchema = new mongoose.Schema(
     },
     lastName: {
       type: String,
-      required: true,
       minLength: 2,
       maxLength: [20, "Max Length is 20 char"],
     },
@@ -24,7 +25,9 @@ const userSchema = new mongoose.Schema(
     confirmEmail: Date,
     password: {
       type: String,
-      required: true,
+      required: function () {
+        return this.provider === providerEnum.system ? true : false;
+      },
     },
     gender: {
       type: String,
@@ -34,7 +37,23 @@ const userSchema = new mongoose.Schema(
       },
       default: genderEnum.male,
     },
-    phone: String,
+    phone: {
+      type: String,
+      required: function () {
+        return this.provider === providerEnum.system ? true : false;
+      },
+    },
+    role: {
+      type: String,
+      enum: Object.values(roleEnum),
+      default: roleEnum.user,
+    },
+    picture: String,
+    provider: {
+      type: String,
+      enum: Object.values(providerEnum),
+      default: providerEnum.system,
+    },
   },
   {
     timestamps: true,

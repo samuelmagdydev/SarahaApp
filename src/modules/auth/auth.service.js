@@ -1,4 +1,4 @@
-import { UserModel } from "../../DB/models/User.model.js";
+import { providerEnum, UserModel } from "../../DB/models/User.model.js";
 import { asyncHandler, successResponse } from "../../utils/response.js";
 import * as DBService from "../../DB/db.service.js";
 import {
@@ -6,7 +6,8 @@ import {
   compareHash,
 } from "../../utils/security/hash.security.js";
 import { generateEncryption } from "../../utils/security/encryption.security.js";
-import { generateToken } from "../../utils/security/token.security.js";
+import { generateLoginCredentials } from "../../utils/security/token.security.js";
+import { OAuth2Client } from "google-auth-library";
 
 export const signup = asyncHandler(async (req, res, next) => {
   const { firstName, lastName, email, password, phone } = req.body;
@@ -34,7 +35,7 @@ export const login = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
   const user = await DBService.findOne({
     model: UserModel,
-    filter: { email },
+    filter: { email, provider: providerEnum.system },
   });
   if (!user) {
     return next(new Error("In-valid Email Or Paasword", { cause: 404 }));
@@ -46,16 +47,53 @@ export const login = asyncHandler(async (req, res, next) => {
   if (!match) {
     return next(new Error("In-Valid Email Or Paasword", { cause: 404 }));
   }
+  const credentials = await generateLoginCredentials({ user });
+  return successResponse({ res, data: { credentials } });
+});
 
-  const access_token = await generateToken({
-    payload: { _id: user._id },
-    options: { expiresIn: 60 * 60 },
+async function verfiyGoogleAccount({ idToken } = {}) {
+  const client = new OAuth2Client();
+
+  const ticket = await client.verifyIdToken({
+    idToken,
+    audience: process.env.WEB_CLIENT_ID,
+  });
+  const payload = ticket.getPayload();
+  return payload;
+}
+
+export const signupWithGmail = asyncHandler(async (req, res, next) => {
+  const { idToken } = req.body;
+  const { picture, name, email, email_verified } = await verfiyGoogleAccount({
+    idToken,
+  });
+  if (!email_verified) {
+    return next(new Error("Not Verified Account", { cause: 400 }));
+  }
+  const user = await DBService.findOne({
+    model: UserModel,
+    filter: { email },
+  });
+  if (user) {
+    return next(new Error("Email Already Exist", { cause: 409 }));
+  }
+  const newUser = await DBService.create({
+    model: UserModel,
+    data: [
+      {
+        email,
+        picture,
+        firstName: name,
+        confirmEmail: Date.now(),
+        provider: providerEnum.google,
+      },
+    ],
   });
 
-  const refresh_token = await generateToken({
-    payload: { _id: user._id },
-    signature: process.env.REFRESH_TOKEN_SIGNATURE,
-    options: { expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRES_IN) },
+  return successResponse({
+    res,
+    status: 201,
+    message: "Account Created Successfuly",
+    data: { user: newUser._id },
   });
-  return successResponse({ res, data: { user, access_token, refresh_token } });
 });

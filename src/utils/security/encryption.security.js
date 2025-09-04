@@ -7,6 +7,7 @@ export const generateEncryption = async ({
   return crypto.AES.encrypt(plaintext, secretKey).toString();
 };
 
+
 export const decreyptEncryption = async ({
   cipherText = "",
   secretKey = process.env.ENCRYPTION_SECRET,
