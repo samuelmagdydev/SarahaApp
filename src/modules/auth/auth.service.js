@@ -97,3 +97,32 @@ export const signupWithGmail = asyncHandler(async (req, res, next) => {
     data: { user: newUser._id },
   });
 });
+
+export const loginWithGmail = asyncHandler(async (req, res, next) => {
+  const { idToken } = req.body;
+  const { picture, name, email, email_verified } = await verfiyGoogleAccount({
+    idToken,
+  });
+  if (!email_verified) {
+    return next(new Error("Not Verified Account", { cause: 400 }));
+  }
+  const user = await DBService.findOne({
+    model: UserModel,
+    filter: { email, provider: providerEnum.google },
+  });
+  if (!user) {
+    return next(
+      new Error("In-valid login Data Or Invalid Provider", { cause: 404 })
+    );
+  }
+ 
+
+  const credentials = await generateLoginCredentials({ user });
+
+  return successResponse({
+    res,
+    status: 200,
+    message: "Account Created Successfuly",
+    data: { credentials },
+  });
+});
