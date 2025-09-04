@@ -75,6 +75,16 @@ export const signupWithGmail = asyncHandler(async (req, res, next) => {
     filter: { email },
   });
   if (user) {
+    if (user.provider === providerEnum.google) {
+      const credentials = await generateLoginCredentials({ user });
+
+      return successResponse({
+        res,
+        status: 200,
+        message: "Login Successfuly",
+        data: { credentials },
+      });
+    }
     return next(new Error("Email Already Exist", { cause: 409 }));
   }
   const newUser = await DBService.create({
@@ -89,13 +99,21 @@ export const signupWithGmail = asyncHandler(async (req, res, next) => {
       },
     ],
   });
+   
 
-  return successResponse({
-    res,
-    status: 201,
-    message: "Account Created Successfuly",
-    data: { user: newUser._id },
-  });
+  const credentials = await generateLoginCredentials({ user : newUser });
+
+      return successResponse({
+        res,
+        status: 201,
+        data: { credentials },
+      });
+  // return successResponse({
+  //   res,
+  //   status: 201,
+  //   message: "Account Created Successfuly",
+  //   data: { user: newUser._id },
+  // });
 });
 
 export const loginWithGmail = asyncHandler(async (req, res, next) => {
@@ -115,7 +133,6 @@ export const loginWithGmail = asyncHandler(async (req, res, next) => {
       new Error("In-valid login Data Or Invalid Provider", { cause: 404 })
     );
   }
- 
 
   const credentials = await generateLoginCredentials({ user });
 
