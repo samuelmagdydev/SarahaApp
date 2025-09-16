@@ -27,6 +27,14 @@ router.patch(
   userService.updateBasicInfo
 );
 
+
+router.patch(
+  "/password",
+  authenticationMiddleware(),
+  validation(validators.updatePassword),
+  userService.updatePassword
+);
+
 router.delete(
   "{/:userId}/freeze-account",
   authenticationMiddleware(),

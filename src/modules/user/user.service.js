@@ -6,6 +6,7 @@ import {
 } from "../../utils/security/encryption.security.js";
 import { generateLoginCredentials } from "../../utils/security/token.security.js";
 import * as DBService from "../../DB/db.service.js";
+import { compareHash } from "../../utils/security/hash.security.js";
 
 export const profile = asyncHandler(async (req, res, next) => {
   req.user.phone = await decreyptEncryption({ cipherText: req.user.phone });
@@ -43,6 +44,28 @@ export const updateBasicInfo = asyncHandler(async (req, res, next) => {
     : next(new Error("In-valid Or Not Confirmed account", { cause: 404 }));
 });
 
+export const updatePassword = asyncHandler(async (req, res, next) => {
+  const { oldPassword, password } = req.body;
+  if (
+    !(await compareHash({
+      plaintext: oldPassword,
+      hashValue: req.user.password,
+    }))
+  ) {
+    return next(new Error("In-valid Old Password"));
+  }
+  const user = await DBService.findOneAndUpdate({
+    model: UserModel,
+    filter: {
+      _id: req.user._id,
+    },
+    data: { password: await generateHash({ plaintext: password }) },
+  });
+  return user
+    ? successResponse({ res, data: { user } })
+    : next(new Error("In-valid Or Not Confirmed account", { cause: 404 }));
+});
+
 export const freezeAccount = asyncHandler(async (req, res, next) => {
   const { userId } = req.params;
   if (userId && req.user.role !== roleEnum.admin) {
@@ -68,17 +91,15 @@ export const freezeAccount = asyncHandler(async (req, res, next) => {
     : next(new Error("In-valid Or Not Confirmed account", { cause: 404 }));
 });
 
-
 export const deleteAccount = asyncHandler(async (req, res, next) => {
   const { userId } = req.params;
-  
+
   const user = await DBService.deleteOne({
     model: UserModel,
     filter: {
-      _id: userId ,
+      _id: userId,
       deletedAt: { $exists: true },
     },
-    
   });
   return user.deletedCount
     ? successResponse({ res, data: { user } })

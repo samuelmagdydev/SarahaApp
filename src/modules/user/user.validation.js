@@ -8,37 +8,39 @@ export const shareProfileValidationSchema = {
   }),
 };
 
-
 export const updateBasicInfo = {
   body: Joi.object().keys({
     firstName: generalFields.firstName,
-    lastName:generalFields.lastName,
-    phone:generalFields.phone,
-    gender:generalFields.gender
-  })
-}
+    lastName: generalFields.lastName,
+    phone: generalFields.phone,
+    gender: generalFields.gender,
+  }),
+};
 
-
-
+export const updatePassword = {
+  body: Joi.object()
+    .keys({
+      oldPassowrd: generalFields.password.required(),
+      password: generalFields.password.not(Joi.ref("oldPassword")).required(),
+      confirmPassword: generalFields.confirmPassword.required(),
+    })
+    .required(),
+};
 
 export const freezeAccount = {
   params: Joi.object().keys({
-    userId: generalFields.Id
+    userId: generalFields.Id,
   }),
 };
-
 
 export const restoreAccount = {
   params: Joi.object().keys({
-    userId: generalFields.Id.required()
+    userId: generalFields.Id.required(),
   }),
 };
-
 
 export const deleteAccount = {
   params: Joi.object().keys({
-    userId: generalFields.Id.required()
+    userId: generalFields.Id.required(),
   }),
 };
-
-
