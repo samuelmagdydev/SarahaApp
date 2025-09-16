@@ -9,7 +9,11 @@ router.post(
   validation(validators.sigupValidationSchema),
   authService.signup
 );
-router.patch("/confirmEmail", authService.confirmEmail);
+router.patch(
+  "/confirmEmail",
+  validation(validators.confirmEmailValidationSchema),
+  authService.confirmEmail
+);
 
 router.post(
   "/login",
@@ -17,7 +21,15 @@ router.post(
   authService.login
 );
 
-router.post("/signup/gmail", authService.signupWithGmail);
-router.post("/login/gmail", authService.loginWithGmail);
+router.post(
+  "/signup/gmail",
+  validation(validators.loginWithGmailValidationSchema),
+  authService.signupWithGmail
+);
+router.post(
+  "/login/gmail",
+  validation(validators.loginWithGmailValidationSchema),
+  authService.loginWithGmail
+);
 
 export default router;
