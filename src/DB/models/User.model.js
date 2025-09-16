@@ -55,6 +55,11 @@ const userSchema = new mongoose.Schema(
       default: providerEnum.system,
     },
     confirmEmailOtp: String,
+    deletedAt: Date,
+    deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+
+    restoredAt: Date,
+    restoredBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   {
     timestamps: true,

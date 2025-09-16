@@ -27,6 +27,31 @@ router.patch(
   userService.updateBasicInfo
 );
 
+router.delete(
+  "{/:userId}/freeze-account",
+  authenticationMiddleware(),
+  validation(validators.freezeAccount),
+  userService.freezeAccount
+);
+
+
+
+router.delete(
+  "/:userId",
+  auth({accessRoles:endpoint.deleteAccount}),
+  validation(validators.deleteAccount),
+  userService.deleteAccount
+);
+
+
+router.patch(
+  "/:userId/restore-account",
+ auth({accessRoles:endpoint.restoreAccount}),
+  authenticationMiddleware(),
+  validation(validators.restoreAccount),
+  userService.restoreAccount
+);
+
 router.get(
   "/refresh-token",
   authenticationMiddleware({ tokenType: tokenTypeEnum.refresh }),

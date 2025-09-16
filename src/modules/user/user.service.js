@@ -1,4 +1,4 @@
-import { UserModel } from "../../DB/models/User.model.js";
+import { roleEnum, UserModel } from "../../DB/models/User.model.js";
 import { asyncHandler, successResponse } from "../../utils/response.js";
 import {
   decreyptEncryption,
@@ -37,6 +37,72 @@ export const updateBasicInfo = asyncHandler(async (req, res, next) => {
       _id: req.user._id,
     },
     data: req.body,
+  });
+  return user
+    ? successResponse({ res, data: { user } })
+    : next(new Error("In-valid Or Not Confirmed account", { cause: 404 }));
+});
+
+export const freezeAccount = asyncHandler(async (req, res, next) => {
+  const { userId } = req.params;
+  if (userId && req.user.role !== roleEnum.admin) {
+    return next(new Error("Not Authorized Account", { cause: 403 }));
+  }
+  const user = await DBService.findOneAndUpdate({
+    model: UserModel,
+    filter: {
+      _id: userId || req.user._id,
+      deletedAt: { $exists: false },
+    },
+    data: {
+      deletedAt: new Date(),
+      deletedBy: req.user._id,
+      $unset: {
+        restoredAt: 1,
+        restoredBy: 1,
+      },
+    },
+  });
+  return user
+    ? successResponse({ res, data: { user } })
+    : next(new Error("In-valid Or Not Confirmed account", { cause: 404 }));
+});
+
+
+export const deleteAccount = asyncHandler(async (req, res, next) => {
+  const { userId } = req.params;
+  
+  const user = await DBService.deleteOne({
+    model: UserModel,
+    filter: {
+      _id: userId ,
+      deletedAt: { $exists: true },
+    },
+    
+  });
+  return user.deletedCount
+    ? successResponse({ res, data: { user } })
+    : next(new Error("In-valid Or Not Confirmed account", { cause: 404 }));
+});
+
+export const restoreAccount = asyncHandler(async (req, res, next) => {
+  const { userId } = req.params;
+
+  const user = await DBService.findOneAndUpdate({
+    model: UserModel,
+    filter: {
+      _id: userId,
+      deletedAt: { $exists: true },
+      deletedBy: { $ne: userId },
+    },
+    data: {
+      $unset: {
+        deletedAt: 1,
+        deletedBy: 1,
+      },
+      restoredAt: Date.now(),
+      restoredBy: req.user._id,
+    },
   });
   return user
     ? successResponse({ res, data: { user } })

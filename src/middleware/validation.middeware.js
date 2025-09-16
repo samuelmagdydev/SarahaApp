@@ -43,7 +43,7 @@ export const generalFields = {
     .messages({
       "string.pattern.base": `Phone number must be a valid Egyptian mobile number`,
     }),
-    otp: Joi.string().pattern(new RegExp(/^d{6}$/)),
+    otp: Joi.string(),
     gender:Joi.string().valid(...Object.values(genderEnum)),
       Id: Joi.string()
       .custom((value, helper) => {

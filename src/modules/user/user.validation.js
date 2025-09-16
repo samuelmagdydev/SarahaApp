@@ -17,3 +17,28 @@ export const updateBasicInfo = {
     gender:generalFields.gender
   })
 }
+
+
+
+
+export const freezeAccount = {
+  params: Joi.object().keys({
+    userId: generalFields.Id
+  }),
+};
+
+
+export const restoreAccount = {
+  params: Joi.object().keys({
+    userId: generalFields.Id.required()
+  }),
+};
+
+
+export const deleteAccount = {
+  params: Joi.object().keys({
+    userId: generalFields.Id.required()
+  }),
+};
+
+

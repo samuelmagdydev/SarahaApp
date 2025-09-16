@@ -43,10 +43,17 @@ export const findOneAndUpdate = async ({
 } = {}) => {
   return await model
     .findOneAndUpdate(
-      filter, {
-      ...data,
-      $inc: { __v: 1 },
-    },options)
+      filter,
+      {
+        ...data,
+        $inc: { __v: 1 },
+      },
+      options
+    )
     .select(select)
     .populate(populate);
+};
+
+export const deleteOne = async ({ model, filter = {} } = {}) => {
+  return await model.deleteOne(filter);
 };
