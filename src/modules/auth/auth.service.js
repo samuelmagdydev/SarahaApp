@@ -12,6 +12,8 @@ import { sendEmail } from "../../utils/email/send.email.js";
 import { emailEvent } from "../../utils/events/email.event.js";
 import { customAlphabet } from "nanoid";
 
+import * as validators from "./auth.validation.js";
+
 export const signup = asyncHandler(async (req, res, next) => {
   const { firstName, lastName, email, password, phone } = req.body;
   if (await DBService.findOne({ model: UserModel, filter: { email } })) {
@@ -71,7 +73,7 @@ export const confirmEmail = asyncHandler(async (req, res, next) => {
     return next(new Error("In-valid OTP", { cause: 400 }));
   }
 
-const updatedUser =  await DBService.updateOne({
+  const updatedUser = await DBService.updateOne({
     model: UserModel,
     filter: { email },
     data: {
@@ -81,16 +83,18 @@ const updatedUser =  await DBService.updateOne({
     },
   });
 
-  return updatedUser.matchedCount ? successResponse({
-    res,
-    status: 200,
-    message: "Account Confirmed Successfuly",
-    
-  })
-  : next(new Error("Fail to confirm email", { cause: 400 }));
+  return updatedUser.matchedCount
+    ? successResponse({
+        res,
+        status: 200,
+        message: "Account Confirmed Successfuly",
+      })
+    : next(new Error("Fail to confirm email", { cause: 400 }));
 });
 
 export const login = asyncHandler(async (req, res, next) => {
+
+  
   const { email, password } = req.body;
   const user = await DBService.findOne({
     model: UserModel,
