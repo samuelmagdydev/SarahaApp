@@ -19,7 +19,16 @@ export const findById = async ({
 export const create = async ({
   model,
   data = [{}],
-  options = { validateBeforeSave: true }
+  options = { validateBeforeSave: true },
 }) => {
-  return await model.create(data, options)
+  return await model.create(data, options);
+};
+
+export const updateOne = async ({
+  model,
+  filter = {},
+  data = {},
+  options = { runValidators: true },
+} = {}) => {
+  return await model.updateOne(filter, data, options);
 };

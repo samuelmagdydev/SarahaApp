@@ -8,6 +8,9 @@ import {
 import { generateEncryption } from "../../utils/security/encryption.security.js";
 import { generateLoginCredentials } from "../../utils/security/token.security.js";
 import { OAuth2Client } from "google-auth-library";
+import { sendEmail } from "../../utils/email/send.email.js";
+import { emailEvent } from "../../utils/events/email.event.js";
+import { customAlphabet } from "nanoid";
 
 export const signup = asyncHandler(async (req, res, next) => {
   const { firstName, lastName, email, password, phone } = req.body;
@@ -17,18 +20,74 @@ export const signup = asyncHandler(async (req, res, next) => {
 
   const hashPassword = await generateHash({ plaintext: password });
   const encPhone = await generateEncryption({ plaintext: phone });
+  const otp = customAlphabet("1234567890", 6)();
+  const confirmEmailOtp = await generateHash({ plaintext: otp });
   const [user] = await DBService.create({
     model: UserModel,
     data: [
-      { firstName, lastName, email, password: hashPassword, phone: encPhone },
+      {
+        firstName,
+        lastName,
+        email,
+        password: hashPassword,
+        phone: encPhone,
+        confirmEmailOtp,
+      },
     ],
   });
+
+  emailEvent.emit("confirmEmail", { to: email, otp: otp });
   return successResponse({
     res,
     status: 201,
     message: "Account Created Successfuly",
     data: { user },
   });
+});
+
+export const confirmEmail = asyncHandler(async (req, res, next) => {
+  const { email, otp } = req.body;
+
+  const user = await DBService.findOne({
+    model: UserModel,
+    filter: {
+      email,
+      confirmEmailL: {
+        $exists: false,
+      },
+      confirmEmailOtp: { $exists: true },
+    },
+  });
+
+  if (!user) {
+    return next(
+      new Error("In-valid Email Or Email Already Confirmed", { cause: 404 })
+    );
+  }
+
+  if (
+    !(await compareHash({ plaintext: otp, hashValue: user.confirmEmailOtp }))
+  ) {
+    return next(new Error("In-valid OTP", { cause: 400 }));
+  }
+
+const updatedUser =  await DBService.updateOne({
+    model: UserModel,
+    filter: { email },
+    data: {
+      confirmEmail: Date.now(),
+      $unset: { confirmEmailOtp: true },
+      $inc: { __v: 1 },
+    },
+  });
+
+  return updatedUser.matchedCount ? successResponse({
+    res,
+    status: 200,
+    message: "Account Confirmed Successfuly",
+    
+  })
+  : next(new Error("Fail to confirm email", { cause: 400 }));
 });
 
 export const login = asyncHandler(async (req, res, next) => {
@@ -39,6 +98,10 @@ export const login = asyncHandler(async (req, res, next) => {
   });
   if (!user) {
     return next(new Error("In-valid Email Or Paasword", { cause: 404 }));
+  }
+
+  if (!user.confirmEmail) {
+    return next(new Error("Please Confirm Your Email", { cause: 400 }));
   }
   const match = await compareHash({
     plaintext: password,
@@ -99,15 +162,14 @@ export const signupWithGmail = asyncHandler(async (req, res, next) => {
       },
     ],
   });
-   
 
-  const credentials = await generateLoginCredentials({ user : newUser });
+  const credentials = await generateLoginCredentials({ user: newUser });
 
-      return successResponse({
-        res,
-        status: 201,
-        data: { credentials },
-      });
+  return successResponse({
+    res,
+    status: 201,
+    data: { credentials },
+  });
   // return successResponse({
   //   res,
   //   status: 201,

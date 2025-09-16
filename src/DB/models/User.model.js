@@ -54,6 +54,7 @@ const userSchema = new mongoose.Schema(
       enum: Object.values(providerEnum),
       default: providerEnum.system,
     },
+    confirmEmailOtp: String,
   },
   {
     timestamps: true,
