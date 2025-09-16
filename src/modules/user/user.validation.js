@@ -7,3 +7,13 @@ export const shareProfileValidationSchema = {
     userId: generalFields.Id.required(),
   }),
 };
+
+
+export const updateBasicInfo = {
+  body: Joi.object().keys({
+    firstName: generalFields.firstName,
+    lastName:generalFields.lastName,
+    phone:generalFields.phone,
+    gender:generalFields.gender
+  })
+}

@@ -1,6 +1,7 @@
 import { Types } from "mongoose";
 import { asyncHandler } from "../utils/response.js";
 import Joi from "joi";
+import { genderEnum } from "../DB/models/User.model.js";
 
 export const generalFields = {
   email: Joi.string()
@@ -43,6 +44,7 @@ export const generalFields = {
       "string.pattern.base": `Phone number must be a valid Egyptian mobile number`,
     }),
     otp: Joi.string().pattern(new RegExp(/^d{6}$/)),
+    gender:Joi.string().valid(...Object.values(genderEnum)),
       Id: Joi.string()
       .custom((value, helper) => {
         return (
