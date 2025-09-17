@@ -21,6 +21,28 @@ router.post(
   authService.login
 );
 
+
+router.patch(
+  "/forgot-password",
+  validation(validators.forgetPasswordValidationSchema),
+  authService.forgetPassword
+);
+
+
+router.patch(
+  "/verfiy-forgot-password",
+  validation(validators.verfiyForgotPasswordValidationSchema),
+  authService.verfiyForgotPassword
+);
+
+
+
+router.patch(
+  "/reset-forgot-password",
+  validation(validators.resetForgotPasswordValidationSchema),
+  authService.resetForgotPassword
+);
+
 router.post(
   "/signup/gmail",
   validation(validators.loginWithGmailValidationSchema),

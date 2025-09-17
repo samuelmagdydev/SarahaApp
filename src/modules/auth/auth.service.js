@@ -93,8 +93,6 @@ export const confirmEmail = asyncHandler(async (req, res, next) => {
 });
 
 export const login = asyncHandler(async (req, res, next) => {
-
-  
   const { email, password } = req.body;
   const user = await DBService.findOne({
     model: UserModel,
@@ -116,6 +114,98 @@ export const login = asyncHandler(async (req, res, next) => {
   }
   const credentials = await generateLoginCredentials({ user });
   return successResponse({ res, data: { credentials } });
+});
+
+export const forgetPassword = asyncHandler(async (req, res, next) => {
+  const { email } = req.body;
+  const otp = customAlphabet("0123456789", 6)();
+  const user = await DBService.findOneAndUpdate({
+    model: UserModel,
+    filter: {
+      email,
+      provider: providerEnum.system,
+      confirmEmail: { $exists: true },
+      deletedAt: { $exists: false },
+    },
+    data: {
+      forgotPasswordOtp: await generateHash({ plaintext: otp }),
+    },
+  });
+
+  if (!user) {
+    return next(new Error("In-valid Email", { cause: 404 }));
+  }
+
+  emailEvent.emit("SendForgotPasswordCode", {
+    to: email,
+    subject: "Forget Password",
+    title: "Reset Password",
+    otp,
+  });
+  return successResponse({ res, message: "Code Send Successfully" });
+});
+
+export const verfiyForgotPassword = asyncHandler(async (req, res, next) => {
+  const { email, otp } = req.body;
+  const user = await DBService.findOne({
+    model: UserModel,
+    filter: {
+      email,
+      provider: providerEnum.system,
+      confirmEmail: { $exists: true },
+      deletedAt: { $exists: false },
+      forgotPasswordOtp: { $exists: true },
+    },
+  });
+
+  if (!user) {
+    return next(new Error("In-valid Email", { cause: 404 }));
+  }
+
+  if (
+    !(await compareHash({ plaintext: otp, hashValue: user.forgotPasswordOtp }))
+  ) {
+    return next(new Error("In-valid OTP", { cause: 400 }));
+  }
+
+  return successResponse({ res, message: "Code Verfied Successfully" });
+});
+
+
+export const resetForgotPassword = asyncHandler(async (req, res, next) => {
+  const { email, otp , password } = req.body;
+  const user = await DBService.findOne({
+    model: UserModel,
+    filter: {
+      email,
+      provider: providerEnum.system,
+      confirmEmail: { $exists: true },
+      deletedAt: { $exists: false },
+      forgotPasswordOtp: { $exists: true },
+    },
+  });
+
+  if (!user) {
+    return next(new Error("In-valid Email", { cause: 404 }));
+  }
+
+  if (
+    !(await compareHash({ plaintext: otp, hashValue: user.forgotPasswordOtp }))
+  ) {
+    return next(new Error("In-valid OTP", { cause: 400 }));
+  }
+
+  await DBService.updateOne({
+    model: UserModel,
+    filter: { email },
+    data: {
+      password: await generateHash({ plaintext: password }),
+      $unset: { forgotPasswordOtp: true },
+      $inc: { __v: 1 },
+    }
+  })
+
+  return successResponse({ res, message: "Password Reset Successfully" });
 });
 
 async function verfiyGoogleAccount({ idToken } = {}) {

@@ -9,7 +9,17 @@ emailEvent.on("confirmEmail", async (data) => {
   await sendEmail({
     to: data.to,
     subject: data.subject || "Confirm Your Email",
-    html: verifyEmailTemplate({otp: data.otp}),
+    html: verifyEmailTemplate({ otp: data.otp }),
+  }).catch((error) => {
+    console.log(`Error in sending email:${data.to}`);
+  });
+});
+
+emailEvent.on("SendForgotPasswordCode", async (data) => {
+  await sendEmail({
+    to: data.to,
+    subject: data.subject || "Forget Password Code",
+    html: verifyEmailTemplate({ otp: data.otp, title: data.title }),
   }).catch((error) => {
     console.log(`Error in sending email:${data.to}`);
   });
