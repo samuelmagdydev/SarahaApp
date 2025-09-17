@@ -6,7 +6,10 @@ import {
 } from "../../utils/security/encryption.security.js";
 import { generateLoginCredentials } from "../../utils/security/token.security.js";
 import * as DBService from "../../DB/db.service.js";
-import { compareHash, generateHash } from "../../utils/security/hash.security.js";
+import {
+  compareHash,
+  generateHash,
+} from "../../utils/security/hash.security.js";
 
 export const profile = asyncHandler(async (req, res, next) => {
   req.user.phone = await decreyptEncryption({ cipherText: req.user.phone });
@@ -47,16 +50,37 @@ export const updateBasicInfo = asyncHandler(async (req, res, next) => {
 export const updatePassword = asyncHandler(async (req, res, next) => {
   const { oldPassword, password } = req.body;
 
-  if (!await compareHash({ plaintext: oldPassword, hashValue: req.user.password })) {
+  if (
+    !(await compareHash({
+      plaintext: oldPassword,
+      hashValue: req.user.password,
+    }))
+  ) {
     return next(new Error("In-valid Old Password", { cause: 400 }));
   }
-   
+
+  if (req.user.oldPasswords?.length) {
+    for (const hashPassword of req.user.oldPasswords) {
+      if (
+        await compareHash({
+          plaintext: password,
+          hashValue: hashPassword,
+        })
+      ) {
+        return next(new Error("this Password Is Used before", { cause: 400 }));
+      }
+    }
+  }
+
   const user = await DBService.findOneAndUpdate({
     model: UserModel,
     filter: {
       _id: req.user._id,
     },
-    data: { password: await generateHash({ plaintext: password }) },
+    data: {
+      password: await generateHash({ plaintext: password }),
+      $push: { oldPasswords: req.user.password },
+    },
   });
   return user
     ? successResponse({ res, data: { user } })

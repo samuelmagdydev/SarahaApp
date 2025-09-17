@@ -29,6 +29,7 @@ const userSchema = new mongoose.Schema(
         return this.provider === providerEnum.system ? true : false;
       },
     },
+    oldPasswords:[String],
     gender: {
       type: String,
       enum: {
