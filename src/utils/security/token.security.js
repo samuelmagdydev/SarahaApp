@@ -1,21 +1,24 @@
 import jwt from "jsonwebtoken";
 import * as DBService from "../../DB/db.service.js";
 import { roleEnum, UserModel } from "../../DB/models/User.model.js";
+import { nanoid } from "nanoid";
+import { TokenModel } from "../../DB/models/Token.model.js";
 
 export const signatureLevelEnum = { bearer: "Bearer", system: "System" };
 export const tokenTypeEnum = { access: "access", refresh: "refresh" };
 
+// ✅ خلي generateToken يقبل secret بدل signature
 export const generateToken = async ({
   payload = {},
-  signature = process.env.ACCESS_USER_TOKEN_SIGNATURE,
+  secret = process.env.ACCESS_USER_TOKEN_SIGNATURE,
   options = { expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRES_IN) },
 } = {}) => {
-  return jwt.sign(payload, signature, options);
+  return jwt.sign(payload, secret, options);
 };
 
 export const verfiyToken = async ({
   token = "",
-  secret = process.env.ACCESS_TOKEN_SIGNATURE,
+  secret = process.env.ACCESS_USER_TOKEN_SIGNATURE, // ✅ خلي default يطابق generate
 } = {}) => {
   return jwt.verify(token, secret);
 };
@@ -48,7 +51,7 @@ export const decodedToken = async ({
     return next(new Error("missing token parts", { cause: 401 }));
   }
 
-  let signatures = await getSignatures({ signatureLevel: bearer });
+  const signatures = await getSignatures({ signatureLevel: bearer });
 
   const decoded = await verfiyToken({
     token,
@@ -57,7 +60,13 @@ export const decodedToken = async ({
         ? signatures.accessSignature
         : signatures.refreshSignature,
   });
-  console.log(decoded);
+
+  console.log("Decoded Token:", decoded);
+
+  // ✅ استخدم decoded.jti مش decode.jti
+ if(decoded.jti && await DBService.findOne({model:TokenModel , filter:{jti:decoded.jti}})){
+  return next(new Error("Token Expired", { cause: 401 }));
+ }
 
   const user = await DBService.findById({
     model: UserModel,
@@ -68,25 +77,35 @@ export const decodedToken = async ({
     return next(new Error("In-valid User", { cause: 404 }));
   }
 
-  return user;
+  return { user, decoded };
 };
 
-export const generateLoginCredentials = async ({user}={}) => {
+export const generateLoginCredentials = async ({ user } = {}) => {
   let signtures = await getSignatures({
     signatureLevel:
       user.role != roleEnum.user
         ? signatureLevelEnum.system
         : signatureLevelEnum.bearer,
   });
+  const jwtid = nanoid();
+
   const access_token = await generateToken({
     payload: { _id: user._id },
     secret: signtures.accessSignature,
+    options: {
+      jwtid,
+      expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRES_IN),
+    },
   });
 
   const refresh_token = await generateToken({
     payload: { _id: user._id },
     secret: signtures.refreshSignature,
-    options: { expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRES_IN) },
+    options: {
+      jwtid,
+      expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRES_IN),
+    },
   });
+
   return { user, access_token, refresh_token };
 };

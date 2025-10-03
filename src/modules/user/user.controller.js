@@ -12,7 +12,16 @@ import * as validators from "./user.validation.js";
 import { Router } from "express";
 const router = Router();
 
+
+router.post("/logout", authenticationMiddleware(), userService.logout);
+
 router.get("/", auth({ accessRoles: endpoint.profile }), userService.profile);
+
+router.get(
+  "/refresh-token",
+  authenticationMiddleware({ tokenType: tokenTypeEnum.refresh }),
+  userService.getNewLoginCredentials
+);
 
 router.get(
   "/:userId",
@@ -60,10 +69,6 @@ router.patch(
   userService.restoreAccount
 );
 
-router.get(
-  "/refresh-token",
-  authenticationMiddleware({ tokenType: tokenTypeEnum.refresh }),
-  userService.getNewLoginCredentials
-);
+
 
 export default router;

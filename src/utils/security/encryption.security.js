@@ -14,3 +14,4 @@ export const decreyptEncryption = async ({
 } = {}) => {
   return crypto.AES.decrypt(cipherText, secretKey).toString(crypto.enc.Utf8);
 };
+

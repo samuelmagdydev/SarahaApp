@@ -4,15 +4,19 @@ import {
   tokenTypeEnum,
 } from "../utils/security/token.security.js";
 
+
+
 export const authenticationMiddleware = ({
   tokenType = tokenTypeEnum.access,
 } = {}) => {
   return asyncHandler(async (req, res, next) => {
-    req.user = await decodedToken({
+    const {user,decoded} = await decodedToken({
       next,
       authorization: req.headers.authorization,
       tokenType,
-    });
+    }) || {};
+    req.user = user;
+    req.decoded = decoded;
     return next();
   });
 };
@@ -40,11 +44,13 @@ export const auth = ({
   accessRoles = [],
 } = {}) => {
   return asyncHandler(async (req, res, next) => {
-    req.user = await decodedToken({
+    const {user,decoded} = await decodedToken({
       next,
       authorization: req.headers.authorization,
       tokenType,
-    });
+    }) || {};
+    req.user = user;  
+    req.decoded = decoded;
     console.log({
       accessRoles,
       currentRole: req.user.role,

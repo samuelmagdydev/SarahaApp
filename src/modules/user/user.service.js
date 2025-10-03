@@ -10,10 +10,23 @@ import {
   compareHash,
   generateHash,
 } from "../../utils/security/hash.security.js";
+import { TokenModel } from "../../DB/models/Token.model.js";
 
 export const profile = asyncHandler(async (req, res, next) => {
   req.user.phone = await decreyptEncryption({ cipherText: req.user.phone });
   return successResponse({ res, data: { user: req.user } });
+});
+
+export const logout = asyncHandler(async (req, res, next) => {
+ await DBService.create({
+  model:TokenModel,
+  data :[{
+    jti : req.decoded.jti,
+    expiresIn : req.decoded.iat + Number(process.env.REFRESH_TOKEN_EXPIRES_IN),
+    userId : req.decoded._id
+  }]
+ })
+  return successResponse({ res, status: 201, message: "Logged Out Successfully" });
 });
 
 export const shareProfile = asyncHandler(async (req, res, next) => {
