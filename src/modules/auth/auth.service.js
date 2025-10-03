@@ -105,6 +105,9 @@ export const login = asyncHandler(async (req, res, next) => {
   if (!user.confirmEmail) {
     return next(new Error("Please Confirm Your Email", { cause: 400 }));
   }
+  if(user.deletedAt){
+    return next(new Error("Account Deleted", { cause: 400 }));
+  } 
   const match = await compareHash({
     plaintext: password,
     hashValue: user.password,
@@ -200,8 +203,9 @@ export const resetForgotPassword = asyncHandler(async (req, res, next) => {
     filter: { email },
     data: {
       password: await generateHash({ plaintext: password }),
-      $unset: { forgotPasswordOtp: true },
-      $inc: { __v: 1 },
+      changeCredentialsTime: Date.now(),
+      $unset: { forgotPasswordOtp: 1 },
+      
     }
   })
 

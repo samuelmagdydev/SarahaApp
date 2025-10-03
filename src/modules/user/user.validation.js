@@ -25,8 +25,7 @@ export const updateBasicInfo = {
 };
 
 export const updatePassword = {
-  body: Joi.object()
-    .keys({
+  body: logout.body.append({
       oldPassword: generalFields.password.required(),
       password: generalFields.password.not(Joi.ref("oldPassword")).required(),
       confirmPassword: generalFields.confirmPassword.required(),

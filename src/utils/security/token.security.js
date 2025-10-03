@@ -114,3 +114,19 @@ export const generateLoginCredentials = async ({ user } = {}) => {
 
   return { user, access_token, refresh_token };
 };
+
+
+export const createRevokeToken = async({req}={})=>{
+     await DBService.create({
+          model: TokenModel,
+          data: [
+            {
+              jti: req.decoded.jti,
+              expiresIn:
+                req.decoded.iat + Number(process.env.REFRESH_TOKEN_EXPIRES_IN),
+              userId: req.decoded._id,
+            },
+          ],
+        })
+        return true;
+}

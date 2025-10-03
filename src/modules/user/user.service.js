@@ -4,7 +4,11 @@ import {
   decreyptEncryption,
   generateEncryption,
 } from "../../utils/security/encryption.security.js";
-import { generateLoginCredentials, logoutEnum } from "../../utils/security/token.security.js";
+import {
+  createRevokeToken,
+  generateLoginCredentials,
+  logoutEnum,
+} from "../../utils/security/token.security.js";
 import * as DBService from "../../DB/db.service.js";
 import {
   compareHash,
@@ -19,10 +23,10 @@ export const profile = asyncHandler(async (req, res, next) => {
 
 export const logout = asyncHandler(async (req, res, next) => {
   const { flag } = req.body;
-  let status = 200
+  let status = 200;
   switch (flag) {
-    case  logoutEnum.signoutFromAll:
-     await DBService.updateOne({
+    case logoutEnum.signoutFromAll:
+      await DBService.updateOne({
         model: UserModel,
         filter: { _id: req.decoded._id },
         data: { changeCredentialsTime: new Date() },
@@ -30,18 +34,8 @@ export const logout = asyncHandler(async (req, res, next) => {
       break;
 
     default:
-      await DBService.create({
-        model: TokenModel,
-        data: [
-          {
-            jti: req.decoded.jti,
-            expiresIn:
-              req.decoded.iat + Number(process.env.REFRESH_TOKEN_EXPIRES_IN),
-            userId: req.decoded._id,
-          },
-        ],
-      });
-      status = 201
+      await createRevokeToken({ req });
+      status = 201;
       break;
   }
 
@@ -84,7 +78,7 @@ export const updateBasicInfo = asyncHandler(async (req, res, next) => {
 });
 
 export const updatePassword = asyncHandler(async (req, res, next) => {
-  const { oldPassword, password } = req.body;
+  const { oldPassword, password, flag } = req.body;
 
   if (
     !(await compareHash({
@@ -108,6 +102,20 @@ export const updatePassword = asyncHandler(async (req, res, next) => {
     }
   }
 
+  let updatedData = {};
+  switch (flag) {
+    case logoutEnum.signoutFromAll:
+      updatedData.changeCredentialsTime = new Date();
+      break;
+
+    case logoutEnum.signout:
+      await createRevokeToken({ req });
+      break;
+
+    default:
+      break;
+  }
+
   const user = await DBService.findOneAndUpdate({
     model: UserModel,
     filter: {
@@ -115,6 +123,7 @@ export const updatePassword = asyncHandler(async (req, res, next) => {
     },
     data: {
       password: await generateHash({ plaintext: password }),
+      ...updatedData,
       $push: { oldPasswords: req.user.password },
     },
   });
@@ -137,6 +146,7 @@ export const freezeAccount = asyncHandler(async (req, res, next) => {
     data: {
       deletedAt: new Date(),
       deletedBy: req.user._id,
+      createCredentialsTime: new Date(),
       $unset: {
         restoredAt: 1,
         restoredBy: 1,
