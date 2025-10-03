@@ -132,6 +132,17 @@ export const updatePassword = asyncHandler(async (req, res, next) => {
     : next(new Error("In-valid Or Not Confirmed account", { cause: 404 }));
 });
 
+export const profileImage = asyncHandler(async (req, res, next) => {
+
+  const user = await DBService.findOneAndUpdate({
+    model: UserModel,
+    filter: { _id: req.user._id },
+    data: { picture: req.file.finalPath },
+  });
+  return  successResponse({ res, data: { user } })
+   
+});
+
 export const freezeAccount = asyncHandler(async (req, res, next) => {
   const { userId } = req.params;
   if (userId && req.user.role !== roleEnum.admin) {

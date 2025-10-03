@@ -10,6 +10,7 @@ import { validation } from "../../middleware/validation.middeware.js";
 import * as userService from "./user.service.js";
 import * as validators from "./user.validation.js";
 import { Router } from "express";
+import { localFileUpload } from "../../utils/multer/local.multer.js";
 const router = Router();
 
 
@@ -69,6 +70,13 @@ router.patch(
   userService.restoreAccount
 );
 
+
+router.patch(
+  "/profile-image",
+  authenticationMiddleware(),
+  localFileUpload({customPath:"User"}).single("image"),
+  userService.profileImage
+);
 
 
 export default router;
