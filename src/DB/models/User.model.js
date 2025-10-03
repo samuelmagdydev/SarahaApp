@@ -31,6 +31,7 @@ const userSchema = new mongoose.Schema(
     },
     oldPasswords:[String],
     forgotPasswordOtp: String,
+    changeCredentialsTime : Date,
     gender: {
       type: String,
       enum: {

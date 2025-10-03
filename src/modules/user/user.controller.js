@@ -13,7 +13,7 @@ import { Router } from "express";
 const router = Router();
 
 
-router.post("/logout", authenticationMiddleware(), userService.logout);
+router.post("/logout", authenticationMiddleware(), validation(validators.logout)  ,userService.logout);
 
 router.get("/", auth({ accessRoles: endpoint.profile }), userService.profile);
 

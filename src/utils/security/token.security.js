@@ -6,6 +6,7 @@ import { TokenModel } from "../../DB/models/Token.model.js";
 
 export const signatureLevelEnum = { bearer: "Bearer", system: "System" };
 export const tokenTypeEnum = { access: "access", refresh: "refresh" };
+export const logoutEnum = {signoutFromAll:"signoutFromAll", signout : "signout",stayLoggedIn:"stayLoggedIn"}
 
 // ✅ خلي generateToken يقبل secret بدل signature
 export const generateToken = async ({
@@ -75,6 +76,10 @@ export const decodedToken = async ({
 
   if (!user) {
     return next(new Error("In-valid User", { cause: 404 }));
+  }
+
+  if(user.changeCredentialsTime?.getTime() > decoded.iat * 1000){
+    return next(new Error("Token Expired", { cause: 401 }));
   }
 
   return { user, decoded };

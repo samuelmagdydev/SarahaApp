@@ -1,10 +1,17 @@
 import Joi from "joi";
 import { Types } from "mongoose";
 import { generalFields } from "../../middleware/validation.middeware.js";
+import { logoutEnum } from "../../utils/security/token.security.js";
 
 export const shareProfileValidationSchema = {
   params: Joi.object().keys({
     userId: generalFields.Id.required(),
+  }),
+};
+
+export const logout = {
+  body: Joi.object().keys({
+    flag: Joi.string().valid(...Object.values(logoutEnum)).default(logoutEnum.stayLoggedIn)
   }),
 };
 

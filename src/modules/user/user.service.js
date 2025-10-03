@@ -4,7 +4,7 @@ import {
   decreyptEncryption,
   generateEncryption,
 } from "../../utils/security/encryption.security.js";
-import { generateLoginCredentials } from "../../utils/security/token.security.js";
+import { generateLoginCredentials, logoutEnum } from "../../utils/security/token.security.js";
 import * as DBService from "../../DB/db.service.js";
 import {
   compareHash,
@@ -18,15 +18,38 @@ export const profile = asyncHandler(async (req, res, next) => {
 });
 
 export const logout = asyncHandler(async (req, res, next) => {
- await DBService.create({
-  model:TokenModel,
-  data :[{
-    jti : req.decoded.jti,
-    expiresIn : req.decoded.iat + Number(process.env.REFRESH_TOKEN_EXPIRES_IN),
-    userId : req.decoded._id
-  }]
- })
-  return successResponse({ res, status: 201, message: "Logged Out Successfully" });
+  const { flag } = req.body;
+  let status = 200
+  switch (flag) {
+    case  logoutEnum.signoutFromAll:
+     await DBService.updateOne({
+        model: UserModel,
+        filter: { _id: req.decoded._id },
+        data: { changeCredentialsTime: new Date() },
+      });
+      break;
+
+    default:
+      await DBService.create({
+        model: TokenModel,
+        data: [
+          {
+            jti: req.decoded.jti,
+            expiresIn:
+              req.decoded.iat + Number(process.env.REFRESH_TOKEN_EXPIRES_IN),
+            userId: req.decoded._id,
+          },
+        ],
+      });
+      status = 201
+      break;
+  }
+
+  return successResponse({
+    res,
+    status,
+    message: "Logged Out Successfully",
+  });
 });
 
 export const shareProfile = asyncHandler(async (req, res, next) => {
