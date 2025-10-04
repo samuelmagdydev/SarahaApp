@@ -2,6 +2,7 @@ import { Types } from "mongoose";
 import { asyncHandler } from "../utils/response.js";
 import Joi from "joi";
 import { genderEnum } from "../DB/models/User.model.js";
+import { fileValidation } from "../utils/multer/local.multer.js";
 
 export const generalFields = {
   email: Joi.string()
@@ -43,20 +44,31 @@ export const generalFields = {
     .messages({
       "string.pattern.base": `Phone number must be a valid Egyptian mobile number`,
     }),
-    otp: Joi.string(),
-    gender:Joi.string().valid(...Object.values(genderEnum)),
-      Id: Joi.string()
-      .custom((value, helper) => {
-        return (
-          Types.ObjectId.isValid(value) || helper.message("In-valid ObjectId")
-        );
-      })
-      .length(24)
-      
+  otp: Joi.string(),
+  gender: Joi.string().valid(...Object.values(genderEnum)),
+  Id: Joi.string().custom((value, helper) => {
+    return Types.ObjectId.isValid(value) || helper.message("In-valid ObjectId");
+  }),
+
+  file: {
+    fieldname: Joi.string().required(),
+    originalname: Joi.string().required(),
+    encoding: Joi.string().required(),
+    mimetype:Joi.string().required(),
+    finalPath: Joi.string().required(),
+    destination: Joi.string().required(),
+    filename: Joi.string().required(),
+    path: Joi.string().required(),
+    size: Joi.number().positive().required(),
+  },
+
+  
 };
 
 export const validation = (schema) => {
   return asyncHandler(async (req, res, next) => {
+    console.log(req.files);
+
     const validationError = [];
     for (const key of Object.keys(schema)) {
       const validationResult = schema[key].validate(req[key], {

@@ -10,11 +10,18 @@ import { validation } from "../../middleware/validation.middeware.js";
 import * as userService from "./user.service.js";
 import * as validators from "./user.validation.js";
 import { Router } from "express";
-import { localFileUpload } from "../../utils/multer/local.multer.js";
+import {
+  fileValidation,
+  localFileUpload,
+} from "../../utils/multer/local.multer.js";
 const router = Router();
 
-
-router.post("/logout", authenticationMiddleware(), validation(validators.logout)  ,userService.logout);
+router.post(
+  "/logout",
+  authenticationMiddleware(),
+  validation(validators.logout),
+  userService.logout
+);
 
 router.get("/", auth({ accessRoles: endpoint.profile }), userService.profile);
 
@@ -37,7 +44,6 @@ router.patch(
   userService.updateBasicInfo
 );
 
-
 router.patch(
   "/password",
   authenticationMiddleware(),
@@ -52,31 +58,41 @@ router.delete(
   userService.freezeAccount
 );
 
-
-
 router.delete(
   "/:userId",
-  auth({accessRoles:endpoint.deleteAccount}),
+  auth({ accessRoles: endpoint.deleteAccount }),
   validation(validators.deleteAccount),
   userService.deleteAccount
 );
 
-
 router.patch(
   "/:userId/restore-account",
- auth({accessRoles:endpoint.restoreAccount}),
+  auth({ accessRoles: endpoint.restoreAccount }),
   authenticationMiddleware(),
   validation(validators.restoreAccount),
   userService.restoreAccount
 );
 
-
 router.patch(
   "/profile-image",
   authenticationMiddleware(),
-  localFileUpload({customPath:"User"}).single("image"),
+  localFileUpload({
+    customPath: "User",
+    validation: fileValidation.image,
+  }).single("image"),
   userService.profileImage
 );
 
+
+router.patch(
+  "/profile-cover-image",
+  authenticationMiddleware(),
+  localFileUpload({
+    customPath: "User",
+    validation: fileValidation.image,
+  }).array("coverImages",2),
+  validation(validators.profileCoverImage),
+  userService.profileCoverImage
+);
 
 export default router;

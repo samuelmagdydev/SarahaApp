@@ -133,14 +133,21 @@ export const updatePassword = asyncHandler(async (req, res, next) => {
 });
 
 export const profileImage = asyncHandler(async (req, res, next) => {
-
   const user = await DBService.findOneAndUpdate({
     model: UserModel,
     filter: { _id: req.user._id },
     data: { picture: req.file.finalPath },
   });
-  return  successResponse({ res, data: { user } })
-   
+  return successResponse({ res, data: { user } });
+});
+
+export const profileCoverImage = asyncHandler(async (req, res, next) => {
+  const user = await DBService.findOneAndUpdate({
+    model: UserModel,
+    filter: { _id: req.user._id },
+    data: { coverImages: req.files?.map(file => file.finalPath) },
+  });
+  return successResponse({ res, data: { user } });
 });
 
 export const freezeAccount = asyncHandler(async (req, res, next) => {
