@@ -62,7 +62,7 @@ export const decodedToken = async ({
         : signatures.refreshSignature,
   });
 
-  console.log("Decoded Token:", decoded);
+  
 
   // ✅ استخدم decoded.jti مش decode.jti
  if(decoded.jti && await DBService.findOne({model:TokenModel , filter:{jti:decoded.jti}})){

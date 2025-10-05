@@ -23,11 +23,7 @@ export const authenticationMiddleware = ({
 
 export const authorization = ({ accessRoles = [] } = {}) => {
   return asyncHandler(async (req, res, next) => {
-    console.log({
-      accessRoles,
-      currentRole: req.user.role,
-      match: accessRoles.includes(req.user.role),
-    });
+   
     if (!accessRoles.includes(req.user.role)) {
       return next(
         new Error("You are not authorized to access this resource", {
@@ -51,11 +47,6 @@ export const auth = ({
     }) || {};
     req.user = user;  
     req.decoded = decoded;
-    console.log({
-      accessRoles,
-      currentRole: req.user.role,
-      match: accessRoles.includes(req.user.role),
-    });
     if (!accessRoles.includes(req.user.role)) {
       return next(
         new Error("You are not authorized to access this resource", {

@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "main": "./src/server.js",
   "type": "module",
+  "engines": {
+    "node": "22.17.1"
+  },
   "scripts": {
     "start:dev": "node --watch ./src/server.js"
   },

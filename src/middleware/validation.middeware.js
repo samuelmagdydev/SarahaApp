@@ -67,7 +67,7 @@ export const generalFields = {
 
 export const validation = (schema) => {
   return asyncHandler(async (req, res, next) => {
-    console.log(req.files);
+   
 
     const validationError = [];
     for (const key of Object.keys(schema)) {

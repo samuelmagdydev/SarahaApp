@@ -1,7 +1,7 @@
 import path from "node:path";
 import * as dotenv from "dotenv";
-dotenv.config({ path: path.join("./src/config/.env.dev") });
-
+// dotenv.config({ path: path.join("./src/config/.env.dev") });
+dotenv.config({})
 import express from "express";
 import authController from "./modules/auth/auth.controller.js";
 import userController from "./modules/user/user.controller.js";
@@ -11,7 +11,7 @@ import { globalErrorHandling } from "./utils/response.js";
 import cors from "cors";
 import morgan from "morgan";
 import helmet from "helmet";
-import {rateLimit} from "express-rate-limit";
+import { rateLimit } from "express-rate-limit";
 
 const bootstrap = async () => {
   const app = express();
@@ -20,17 +20,13 @@ const bootstrap = async () => {
   app.use(morgan("dev"));
   app.use(helmet());
 
-const limter  = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  limit: 5, // limit each IP to 100 requests per windowMs
-  message : "Too many requests , please try again later 🤦‍♂️😒 ",
-  // legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-})
-app.use("/auth",limter)
-
-
-
-
+  const limter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    limit: 5, // limit each IP to 100 requests per windowMs
+    message: "Too many requests , please try again later 🤦‍♂️😒 ",
+    // legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  });
+  app.use("/auth", limter);
 
   //DB
   await connectDB();
