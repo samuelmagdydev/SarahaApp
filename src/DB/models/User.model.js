@@ -67,9 +67,15 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
-
+userSchema.virtual('messages',{
+  localField:'_id',
+  foreignField:'receiverId',
+  ref:'Message'
+})
 export const UserModel =
   mongoose.models.User || mongoose.model("User", userSchema);
 UserModel.syncIndexes();

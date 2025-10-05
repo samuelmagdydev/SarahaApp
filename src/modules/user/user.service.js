@@ -25,8 +25,13 @@ import {
 } from "../../utils/multer/cloudinary.js";
 
 export const profile = asyncHandler(async (req, res, next) => {
-  req.user.phone = await decreyptEncryption({ cipherText: req.user.phone });
-  return successResponse({ res, data: { user: req.user } });
+  const user = await DBService.findById({
+    model: UserModel,
+    id: req.user._id,
+    populate: [{ path: "messages" }],
+  });
+  user.phone = await decreyptEncryption({ cipherText: req.user.phone });
+  return successResponse({ res, data: { user } });
 });
 
 export const logout = asyncHandler(async (req, res, next) => {
@@ -170,7 +175,7 @@ export const profileCoverImage = asyncHandler(async (req, res, next) => {
   });
   if (user?.coverImages?.length) {
     await deleteResources({
-      public_ids: user.coverImages.map(ele => ele.public_id),
+      public_ids: user.coverImages.map((ele) => ele.public_id),
     });
   }
   return successResponse({ res, data: { user } });
@@ -213,11 +218,9 @@ export const deleteAccount = asyncHandler(async (req, res, next) => {
     },
   });
 
-   if(user.deletedCount){
-    await deleteFolderByPrefix({prefix:`user/${userId}`});
-   }
-
-
+  if (user.deletedCount) {
+    await deleteFolderByPrefix({ prefix: `user/${userId}` });
+  }
 
   return user.deletedCount
     ? successResponse({ res, data: { user } })
