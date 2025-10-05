@@ -14,6 +14,7 @@ import {
   fileValidation,
   localFileUpload,
 } from "../../utils/multer/local.multer.js";
+import { cloudFileUpload } from "../../utils/multer/cloud.multer.js";
 const router = Router();
 
 router.post(
@@ -76,21 +77,19 @@ router.patch(
 router.patch(
   "/profile-image",
   authenticationMiddleware(),
-  localFileUpload({
-    customPath: "User",
+  cloudFileUpload({
     validation: fileValidation.image,
   }).single("image"),
+  validation(validators.profileImage),
   userService.profileImage
 );
-
 
 router.patch(
   "/profile-cover-image",
   authenticationMiddleware(),
-  localFileUpload({
-    customPath: "User",
+  cloudFileUpload({
     validation: fileValidation.image,
-  }).array("coverImages",2),
+  }).array("coverImages", 2),
   validation(validators.profileCoverImage),
   userService.profileCoverImage
 );

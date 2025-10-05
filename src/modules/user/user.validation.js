@@ -37,6 +37,23 @@ export const updatePassword = {
     .required(),
 };
 
+export const profileImage = {
+  file:Joi.object().keys({
+      fieldname: generalFields.file.filename.valid("image"),
+        originalname: generalFields.file.originalname,
+        encoding: generalFields.file.encoding,
+        mimetype: generalFields.file.mimetype.valid(
+          ...Object.values(fileValidation.image)
+        ),
+        // finalPath: generalFields.file.finalPath,
+        destination: generalFields.file.destination,
+        filename: generalFields.file.filename,
+        path: generalFields.file.path,
+        size: generalFields.file.size,
+  }).required()
+};
+
+
 export const profileCoverImage = {
   files: Joi.array()
     .items(
@@ -47,7 +64,7 @@ export const profileCoverImage = {
         mimetype: generalFields.file.mimetype.valid(
           ...Object.values(fileValidation.image)
         ),
-        finalPath: generalFields.file.finalPath,
+        // finalPath: generalFields.file.finalPath,
         destination: generalFields.file.destination,
         filename: generalFields.file.filename,
         path: generalFields.file.path,

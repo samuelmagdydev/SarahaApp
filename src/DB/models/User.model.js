@@ -51,8 +51,8 @@ const userSchema = new mongoose.Schema(
       enum: Object.values(roleEnum),
       default: roleEnum.user,
     },
-    picture: String,
-    coverImages: [String],
+    picture: { secure_url : String, public_id: String },
+    coverImages: [{ secure_url : String, public_id: String }],
     provider: {
       type: String,
       enum: Object.values(providerEnum),

@@ -15,6 +15,14 @@ import {
   generateHash,
 } from "../../utils/security/hash.security.js";
 import { TokenModel } from "../../DB/models/Token.model.js";
+import {
+  cloud,
+  deleteFolderByPrefix,
+  deleteResources,
+  destroyFile,
+  uploadFile,
+  uploadFiles,
+} from "../../utils/multer/cloudinary.js";
 
 export const profile = asyncHandler(async (req, res, next) => {
   req.user.phone = await decreyptEncryption({ cipherText: req.user.phone });
@@ -133,20 +141,38 @@ export const updatePassword = asyncHandler(async (req, res, next) => {
 });
 
 export const profileImage = asyncHandler(async (req, res, next) => {
+  const { secure_url, public_id } = await uploadFile({
+    file: req.file,
+    path: `user/${req.user._id}`,
+  });
   const user = await DBService.findOneAndUpdate({
     model: UserModel,
     filter: { _id: req.user._id },
-    data: { picture: req.file.finalPath },
+    data: { picture: { secure_url, public_id } },
+    options: { new: false },
   });
+  if (user?.picture?.public_id) {
+    await destroyFile({ public_id: user.picture.public_id });
+  }
   return successResponse({ res, data: { user } });
 });
 
 export const profileCoverImage = asyncHandler(async (req, res, next) => {
+  const attachments = await uploadFiles({
+    files: req.files,
+    path: `user/${req.user._id}/coverImages`,
+  });
   const user = await DBService.findOneAndUpdate({
     model: UserModel,
     filter: { _id: req.user._id },
-    data: { coverImages: req.files?.map(file => file.finalPath) },
+    data: { coverImages: attachments },
+    options: { new: false },
   });
+  if (user?.coverImages?.length) {
+    await deleteResources({
+      public_ids: user.coverImages.map(ele => ele.public_id),
+    });
+  }
   return successResponse({ res, data: { user } });
 });
 
@@ -186,6 +212,13 @@ export const deleteAccount = asyncHandler(async (req, res, next) => {
       deletedAt: { $exists: true },
     },
   });
+
+   if(user.deletedCount){
+    await deleteFolderByPrefix({prefix:`user/${userId}`});
+   }
+
+
+
   return user.deletedCount
     ? successResponse({ res, data: { user } })
     : next(new Error("In-valid Or Not Confirmed account", { cause: 404 }));
