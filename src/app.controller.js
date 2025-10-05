@@ -9,11 +9,29 @@ import messageController from "./modules/message/message.controller.js";
 import connectDB from "./DB/connection.db.js";
 import { globalErrorHandling } from "./utils/response.js";
 import cors from "cors";
+import morgan from "morgan";
+import helmet from "helmet";
+import {rateLimit} from "express-rate-limit";
 
 const bootstrap = async () => {
   const app = express();
   const port = process.env.PORT || 5000;
   app.use(cors());
+  app.use(morgan("dev"));
+  app.use(helmet());
+
+const limter  = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  limit: 5, // limit each IP to 100 requests per windowMs
+  message : "Too many requests , please try again later 🤦‍♂️😒 ",
+  // legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+})
+app.use("/auth",limter)
+
+
+
+
+
   //DB
   await connectDB();
 
