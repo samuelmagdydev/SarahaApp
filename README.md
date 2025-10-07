@@ -72,7 +72,7 @@ This project uses the following technologies and tools:
 
 You can explore and test all SarahaApp API endpoints using Postman:
 
-👉 [View Postman Collection](https://www.postman.com/your-link-here)
+👉 [View Postman Collection](https://winter-meadow-487376.postman.co/workspace/My-Workspace~6fd9e505-5fe9-41e7-8670-0b31817b0ab2/collection/30975028-f38cdac9-bdeb-40fa-8df5-66528a5715e6?action=share&creator=30975028&active-environment=30975028-f71c7189-268c-4a8b-bbf6-43243e9adeb7)
 
 
 ----
