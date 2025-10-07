@@ -17,7 +17,7 @@ const bootstrap = async () => {
   const app = express();
   const port = process.env.PORT || 5000;
   app.use(cors());
-  app.use(morgan("dev"));
+  app.use(morgan("common"));
   app.use(helmet());
 
   const limter = rateLimit({
